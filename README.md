@@ -357,4 +357,4 @@ For support and questions:
 
 ---
 
-*Built with ❤️&☕ using React and TypeScript*
+*Built with ❤️&☕ by kartikmehta18.xyz*
