@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth, UserRole } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -6,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { GraduationCap, Building2, Loader2, Mail } from 'lucide-react';
+import { GraduationCap, Building2, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface RegisterFormProps {
@@ -24,7 +23,6 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, defaultRol
     department: ''
   });
   const [role, setRole] = useState<UserRole>(defaultRole);
-  const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const { register, isLoading } = useAuth();
   const { toast } = useToast();
 
@@ -53,15 +51,6 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, defaultRol
       return;
     }
 
-    if (formData.password.length < 6) {
-      toast({
-        title: "Error",
-        description: "Password must be at least 6 characters long",
-        variant: "destructive"
-      });
-      return;
-    }
-
     if (role === 'student' && !formData.studentId) {
       toast({
         title: "Error",
@@ -83,42 +72,16 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, defaultRol
     if (!success) {
       toast({
         title: "Registration Failed",
-        description: "An error occurred during registration. The email might already be in use.",
+        description: "An error occurred during registration. Please try again.",
         variant: "destructive"
       });
     } else {
-      setRegistrationSuccess(true);
       toast({
-        title: "Registration Successful!",
-        description: "Please check your email to verify your account before logging in.",
+        title: "Welcome!",
+        description: `Successfully registered as ${role}`,
       });
     }
   };
-
-  if (registrationSuccess) {
-    return (
-      <Card className="w-full max-w-md mx-auto">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-4 bg-green-600 p-3 rounded-full w-fit">
-            <Mail className="h-8 w-8 text-white" />
-          </div>
-          <CardTitle className="text-2xl font-bold">Check Your Email</CardTitle>
-          <p className="text-gray-600">We've sent you a verification link</p>
-        </CardHeader>
-        <CardContent className="text-center space-y-4">
-          <p className="text-gray-700">
-            Please check your email <strong>{formData.email}</strong> and click the verification link to activate your account.
-          </p>
-          <p className="text-sm text-gray-600">
-            After verifying your email, you can sign in to your account.
-          </p>
-          <Button onClick={onSwitchToLogin} className="w-full">
-            Go to Sign In
-          </Button>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <Card className="w-full max-w-md mx-auto">
@@ -152,7 +115,6 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, defaultRol
               value={formData.name}
               onChange={(e) => handleInputChange('name', e.target.value)}
               required
-              disabled={isLoading}
             />
           </div>
 
@@ -165,7 +127,6 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, defaultRol
               value={formData.email}
               onChange={(e) => handleInputChange('email', e.target.value)}
               required
-              disabled={isLoading}
             />
           </div>
 
@@ -178,7 +139,6 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, defaultRol
                 value={formData.studentId}
                 onChange={(e) => handleInputChange('studentId', e.target.value)}
                 required
-                disabled={isLoading}
               />
             </div>
           )}
@@ -191,7 +151,6 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, defaultRol
                 placeholder="Enter your department"
                 value={formData.department}
                 onChange={(e) => handleInputChange('department', e.target.value)}
-                disabled={isLoading}
               />
             </div>
           )}
@@ -201,11 +160,10 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, defaultRol
             <Input
               id="password"
               type="password"
-              placeholder="Create a password (min 6 characters)"
+              placeholder="Create a password"
               value={formData.password}
               onChange={(e) => handleInputChange('password', e.target.value)}
               required
-              disabled={isLoading}
             />
           </div>
 
@@ -218,7 +176,6 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, defaultRol
               value={formData.confirmPassword}
               onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
               required
-              disabled={isLoading}
             />
           </div>
 
@@ -239,7 +196,6 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin, defaultRol
               type="button"
               onClick={onSwitchToLogin}
               className="text-blue-600 hover:underline font-medium"
-              disabled={isLoading}
             >
               Sign in
             </button>

@@ -3,12 +3,20 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
-import { GraduationCap, DollarSign, Clock, CheckCircle, FileText, Plus, Wallet, Users, XCircle } from 'lucide-react';
+import { GraduationCap, DollarSign, Clock, CheckCircle, FileText, Plus, Wallet, Users } from 'lucide-react';
 import ScholarshipApplicationForm from './ScholarshipApplicationForm';
 import PaymanOAuth from './PaymanOAuth';
 import StudentPayeeSelector from './StudentPayeeSelector';
 import { applicationService, type Application } from '@/services/applicationService';
-import { useToast } from '@/hooks/use-toast';
+
+interface Application {
+  id: string;
+  scholarshipName: string;
+  amount: number;
+  status: 'pending' | 'approved' | 'rejected' | 'paid';
+  appliedDate: string;
+  description: string;
+}
 
 type DashboardView = 'overview' | 'applications' | 'payments';
 
@@ -18,35 +26,15 @@ const StudentDashboard: React.FC = () => {
   const [showApplicationForm, setShowApplicationForm] = useState(false);
   const [isWalletConnected, setIsWalletConnected] = useState(false);
   const [applications, setApplications] = useState<Application[]>([]);
-  const [loading, setLoading] = useState(false);
-  const { toast } = useToast();
 
-  // Load applications from Supabase on component mount and when user changes
+  // Load applications from localStorage on component mount and when user changes
   useEffect(() => {
     if (user?.email) {
-      loadStudentApplications();
-    }
-  }, [user?.email]);
-
-  const loadStudentApplications = async () => {
-    if (!user?.email) return;
-    
-    setLoading(true);
-    try {
-      const userApplications = await applicationService.getStudentApplications(user.email);
+      const userApplications = applicationService.getStudentApplications(user.email);
       setApplications(userApplications);
       console.log('Loaded student applications:', userApplications);
-    } catch (error) {
-      console.error('Error loading applications:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load applications",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [user?.email]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -62,7 +50,6 @@ const StudentDashboard: React.FC = () => {
     switch (status) {
       case 'pending': return <Clock className="h-4 w-4" />;
       case 'approved': return <CheckCircle className="h-4 w-4" />;
-      case 'rejected': return <XCircle className="h-4 w-4" />;
       case 'paid': return <DollarSign className="h-4 w-4" />;
       default: return <FileText className="h-4 w-4" />;
     }
@@ -76,9 +63,12 @@ const StudentDashboard: React.FC = () => {
     .filter(app => app.status === 'paid')
     .reduce((sum, app) => sum + app.amount, 0);
 
-  const addApplication = async (newApp: Omit<Application, 'id' | 'appliedDate' | 'status' | 'studentName' | 'studentEmail' | 'studentId'>) => {
-    // Refresh applications from Supabase after submission
-    await loadStudentApplications();
+  const addApplication = (newApp: Omit<Application, 'id' | 'appliedDate' | 'status' | 'studentName' | 'studentEmail' | 'studentId'>) => {
+    // Refresh applications from localStorage after submission
+    if (user?.email) {
+      const updatedApplications = applicationService.getStudentApplications(user.email);
+      setApplications(updatedApplications);
+    }
     setShowApplicationForm(false);
   };
 
@@ -145,35 +135,28 @@ const StudentDashboard: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="flex items-center justify-center py-4">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-              <span className="ml-2">Loading...</span>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {applications.slice(0, 3).map((app) => (
-                <div key={app.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="font-semibold text-lg">{app.scholarshipName}</h3>
-                        <Badge className={`${getStatusColor(app.status)} flex items-center gap-1`}>
-                          {getStatusIcon(app.status)}
-                          {app.status.charAt(0).toUpperCase() + app.status.slice(1)}
-                        </Badge>
-                      </div>
-                      <p className="text-gray-600 mb-2">{app.description}</p>
-                      <div className="flex items-center gap-4 text-sm text-gray-500">
-                        <span>Applied: {new Date(app.appliedDate).toLocaleDateString()}</span>
-                        <span>Amount: ${app.amount.toLocaleString()}</span>
-                      </div>
+          <div className="space-y-4">
+            {applications.slice(0, 3).map((app) => (
+              <div key={app.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h3 className="font-semibold text-lg">{app.scholarshipName}</h3>
+                      <Badge className={`${getStatusColor(app.status)} flex items-center gap-1`}>
+                        {getStatusIcon(app.status)}
+                        {app.status.charAt(0).toUpperCase() + app.status.slice(1)}
+                      </Badge>
+                    </div>
+                    <p className="text-gray-600 mb-2">{app.description}</p>
+                    <div className="flex items-center gap-4 text-sm text-gray-500">
+                      <span>Applied: {new Date(app.appliedDate).toLocaleDateString()}</span>
+                      <span>Amount: ${app.amount.toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
+              </div>
+            ))}
+          </div>
         </CardContent>
       </Card>
     </div>
@@ -192,12 +175,7 @@ const StudentDashboard: React.FC = () => {
         </Button>
       </CardHeader>
       <CardContent>
-        {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <span className="ml-2">Loading applications...</span>
-          </div>
-        ) : applications.length === 0 ? (
+        {applications.length === 0 ? (
           <div className="text-center py-8">
             <GraduationCap className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-600">No applications yet. Apply for your first scholarship!</p>

@@ -1,6 +1,4 @@
 
-import { supabase } from "@/integrations/supabase/client";
-
 export interface Application {
   id: string;
   studentName: string;
@@ -8,189 +6,72 @@ export interface Application {
   studentId: string;
   scholarshipName: string;
   amount: number;
-  status: 'pending' | 'approved' | 'rejected' | 'paid';
+  status: 'pending' | 'approved' | 'rejected';
   appliedDate: string;
   description: string;
   category: string;
   requirements: string;
 }
 
+const APPLICATIONS_KEY = 'scholarship_applications';
+
 export const applicationService = {
-  // Get all applications (for government users)
-  async getAllApplications(): Promise<Application[]> {
+  // Get all applications
+  getAllApplications(): Application[] {
     try {
-      console.log('Fetching all applications from Supabase...');
-      
-      const { data, error } = await supabase
-        .from('applications')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Supabase error fetching applications:', error);
-        throw new Error(`Failed to fetch applications: ${error.message}`);
-      }
-
-      console.log('Successfully fetched applications:', data?.length || 0);
-      return data.map(app => ({
-        id: app.id,
-        studentName: app.student_name,
-        studentEmail: app.student_email,
-        studentId: app.student_id,
-        scholarshipName: app.scholarship_name,
-        amount: app.amount,
-        status: app.status as 'pending' | 'approved' | 'rejected' | 'paid',
-        appliedDate: app.applied_date,
-        description: app.description,
-        category: app.category,
-        requirements: app.requirements || ''
-      }));
+      const stored = localStorage.getItem(APPLICATIONS_KEY);
+      return stored ? JSON.parse(stored) : [];
     } catch (error) {
       console.error('Error reading applications:', error);
-      throw error;
+      return [];
     }
   },
 
   // Get applications for a specific student
-  async getStudentApplications(studentEmail: string): Promise<Application[]> {
-    try {
-      console.log('Fetching applications for student:', studentEmail);
-      
-      const { data, error } = await supabase
-        .from('applications')
-        .select('*')
-        .eq('student_email', studentEmail)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Supabase error fetching student applications:', error);
-        throw new Error(`Failed to fetch student applications: ${error.message}`);
-      }
-
-      console.log('Successfully fetched student applications:', data?.length || 0);
-      return data.map(app => ({
-        id: app.id,
-        studentName: app.student_name,
-        studentEmail: app.student_email,
-        studentId: app.student_id,
-        scholarshipName: app.scholarship_name,
-        amount: app.amount,
-        status: app.status as 'pending' | 'approved' | 'rejected' | 'paid',
-        appliedDate: app.applied_date,
-        description: app.description,
-        category: app.category,
-        requirements: app.requirements || ''
-      }));
-    } catch (error) {
-      console.error('Error reading student applications:', error);
-      throw error;
-    }
+  getStudentApplications(studentEmail: string): Application[] {
+    const allApplications = this.getAllApplications();
+    return allApplications.filter(app => app.studentEmail === studentEmail);
   },
 
-  // Add new application - optimized for speed
-  async addApplication(application: Omit<Application, 'id' | 'appliedDate' | 'status'>): Promise<Application | null> {
-    try {
-      console.log('Adding new application to Supabase:', application);
-      
-      // Use faster insert without additional session check since auth is handled by RLS
-      const { data, error } = await supabase
-        .from('applications')
-        .insert({
-          student_name: application.studentName,
-          student_email: application.studentEmail,
-          student_id: application.studentId,
-          scholarship_name: application.scholarshipName,
-          amount: application.amount,
-          description: application.description,
-          category: application.category,
-          requirements: application.requirements
-        })
-        .select()
-        .single();
+  // Add new application
+  addApplication(application: Omit<Application, 'id' | 'appliedDate' | 'status'>): Application {
+    const newApplication: Application = {
+      ...application,
+      id: Math.random().toString(36).substr(2, 9),
+      appliedDate: new Date().toISOString().split('T')[0],
+      status: 'pending'
+    };
 
-      if (error) {
-        console.error('Supabase error adding application:', error);
-        throw new Error(`Failed to submit application: ${error.message}`);
-      }
-
-      const newApplication: Application = {
-        id: data.id,
-        studentName: data.student_name,
-        studentEmail: data.student_email,
-        studentId: data.student_id,
-        scholarshipName: data.scholarship_name,
-        amount: data.amount,
-        status: data.status as 'pending' | 'approved' | 'rejected' | 'paid',
-        appliedDate: data.applied_date,
-        description: data.description,
-        category: data.category,
-        requirements: data.requirements || ''
-      };
-
-      console.log('Application added successfully:', newApplication);
-      return newApplication;
-    } catch (error) {
-      console.error('Error adding application:', error);
-      throw error;
-    }
+    const applications = this.getAllApplications();
+    applications.unshift(newApplication);
+    localStorage.setItem(APPLICATIONS_KEY, JSON.stringify(applications));
+    
+    console.log('Application added:', newApplication);
+    return newApplication;
   },
 
   // Update application status
-  async updateApplicationStatus(applicationId: string, status: 'approved' | 'rejected' | 'paid'): Promise<boolean> {
+  updateApplicationStatus(applicationId: string, status: 'approved' | 'rejected'): boolean {
     try {
-      console.log('Updating application status:', applicationId, status);
+      const applications = this.getAllApplications();
+      const applicationIndex = applications.findIndex(app => app.id === applicationId);
       
-      const { error } = await supabase
-        .from('applications')
-        .update({ status })
-        .eq('id', applicationId);
-      
-      if (error) {
-        console.error('Supabase error updating application status:', error);
-        throw new Error(`Failed to update application status: ${error.message}`);
+      if (applicationIndex !== -1) {
+        applications[applicationIndex].status = status;
+        localStorage.setItem(APPLICATIONS_KEY, JSON.stringify(applications));
+        console.log('Application status updated:', applicationId, status);
+        return true;
       }
-
-      console.log('Application status updated successfully:', applicationId, status);
-      return true;
+      return false;
     } catch (error) {
       console.error('Error updating application status:', error);
-      throw error;
+      return false;
     }
   },
 
   // Get approved applications (for payment history)
-  async getApprovedApplications(): Promise<Application[]> {
-    try {
-      console.log('Fetching approved applications...');
-      
-      const { data, error } = await supabase
-        .from('applications')
-        .select('*')
-        .eq('status', 'approved')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Supabase error fetching approved applications:', error);
-        throw new Error(`Failed to fetch approved applications: ${error.message}`);
-      }
-
-      console.log('Successfully fetched approved applications:', data?.length || 0);
-      return data.map(app => ({
-        id: app.id,
-        studentName: app.student_name,
-        studentEmail: app.student_email,
-        studentId: app.student_id,
-        scholarshipName: app.scholarship_name,
-        amount: app.amount,
-        status: app.status as 'pending' | 'approved' | 'rejected' | 'paid',
-        appliedDate: app.applied_date,
-        description: app.description,
-        category: app.category,
-        requirements: app.requirements || ''
-      }));
-    } catch (error) {
-      console.error('Error reading approved applications:', error);
-      throw error;
-    }
+  getApprovedApplications(): Application[] {
+    const allApplications = this.getAllApplications();
+    return allApplications.filter(app => app.status === 'approved');
   }
 };

@@ -4,10 +4,20 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { FileText, Eye, CheckCircle, XCircle, DollarSign, Calendar, User, RefreshCw } from 'lucide-react';
+import { FileText, Eye, CheckCircle, XCircle, DollarSign, Calendar, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { applicationService, type Application } from '@/services/applicationService';
-import { paymanService } from '@/services/paymanService';
+
+interface Application {
+  id: string;
+  studentName: string;
+  studentEmail: string;
+  scholarshipName: string;
+  amount: number;
+  status: 'pending' | 'approved' | 'rejected';
+  appliedDate: string;
+  description: string;
+}
 
 interface ApplicationReviewProps {
   applications: Application[];
@@ -21,97 +31,42 @@ const ApplicationReview: React.FC<ApplicationReviewProps> = ({
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
   const [reviewComment, setReviewComment] = useState('');
   const [appList, setAppList] = useState<Application[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [processingApproval, setProcessingApproval] = useState(false);
   const { toast } = useToast();
 
-  // Load applications from Supabase
+  // Use applications from localStorage, refresh when prop changes
   useEffect(() => {
-    loadApplications();
+    const allApplications = applicationService.getAllApplications();
+    setAppList(allApplications);
   }, [propApplications]);
 
-  const loadApplications = async () => {
-    setLoading(true);
-    try {
-      const allApplications = await applicationService.getAllApplications();
-      setAppList(allApplications);
-    } catch (error) {
-      console.error('Error loading applications:', error);
+  const handleReview = (applicationId: string, decision: 'approved' | 'rejected') => {
+    const success = applicationService.updateApplicationStatus(applicationId, decision);
+    
+    if (success) {
+      // Refresh the list from localStorage
+      const updatedApplications = applicationService.getAllApplications();
+      setAppList(updatedApplications);
+
       toast({
-        title: "Error",
-        description: "Failed to load applications",
-        variant: "destructive"
+        title: decision === 'approved' ? "Application Approved" : "Application Rejected",
+        description: `The application has been ${decision}`,
+        variant: decision === 'approved' ? 'default' : 'destructive'
       });
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const handleReview = async (applicationId: string, decision: 'approved' | 'rejected') => {
-    try {
-      // If approving, first create payee in PaymanAI
-      if (decision === 'approved' && selectedApplication) {
-        setProcessingApproval(true);
-        
-        try {
-          console.log('Creating payee for approved application:', selectedApplication);
-          
-          // Create payee using student's name and email
-          await paymanService.addPayee(
-            selectedApplication.studentEmail, 
-            selectedApplication.studentName
-          );
-          
-          toast({
-            title: "Payee Created",
-            description: `Payee created for ${selectedApplication.studentName}`,
-            variant: "default"
-          });
-        } catch (payeeError) {
-          console.error('Error creating payee:', payeeError);
-          toast({
-            title: "Warning",
-            description: "Application approved but payee creation failed. You may need to create the payee manually.",
-            variant: "destructive"
-          });
-        }
+      // Notify parent component to refresh
+      if (onApplicationUpdate) {
+        onApplicationUpdate();
       }
-      
-      const success = await applicationService.updateApplicationStatus(applicationId, decision);
-      
-      if (success) {
-        // Refresh the list from Supabase
-        await loadApplications();
-
-        toast({
-          title: decision === 'approved' ? "Application Approved" : "Application Rejected",
-          description: `The application has been ${decision}`,
-          variant: decision === 'approved' ? 'default' : 'destructive'
-        });
-
-        // Notify parent component to refresh
-        if (onApplicationUpdate) {
-          onApplicationUpdate();
-        }
-      } else {
-        toast({
-          title: "Error",
-          description: "Failed to update application status",
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      console.error('Error updating application:', error);
+    } else {
       toast({
         title: "Error",
         description: "Failed to update application status",
         variant: "destructive"
       });
-    } finally {
-      setProcessingApproval(false);
-      setSelectedApplication(null);
-      setReviewComment('');
     }
+
+    setSelectedApplication(null);
+    setReviewComment('');
   };
 
   const getStatusColor = (status: string) => {
@@ -119,7 +74,6 @@ const ApplicationReview: React.FC<ApplicationReviewProps> = ({
       case 'pending': return 'bg-yellow-100 text-yellow-800';
       case 'approved': return 'bg-green-100 text-green-800';
       case 'rejected': return 'bg-red-100 text-red-800';
-      case 'paid': return 'bg-blue-100 text-blue-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -129,7 +83,6 @@ const ApplicationReview: React.FC<ApplicationReviewProps> = ({
       case 'pending': return <FileText className="h-4 w-4" />;
       case 'approved': return <CheckCircle className="h-4 w-4" />;
       case 'rejected': return <XCircle className="h-4 w-4" />;
-      case 'paid': return <DollarSign className="h-4 w-4" />;
       default: return <FileText className="h-4 w-4" />;
     }
   };
@@ -137,38 +90,15 @@ const ApplicationReview: React.FC<ApplicationReviewProps> = ({
   const pendingApplications = appList.filter(app => app.status === 'pending');
   const reviewedApplications = appList.filter(app => app.status !== 'pending');
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span className="ml-2">Loading applications...</span>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       {/* Pending Applications */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
             Pending Applications ({pendingApplications.length})
           </CardTitle>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={loadApplications}
-            disabled={loading}
-            className="flex items-center gap-2"
-          >
-            {loading ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-            ) : (
-              <RefreshCw className="h-4 w-4" />
-            )}
-            {loading ? 'Refreshing...' : 'Refresh'}
-          </Button>
         </CardHeader>
         <CardContent>
           {pendingApplications.length === 0 ? (
@@ -270,20 +200,14 @@ const ApplicationReview: React.FC<ApplicationReviewProps> = ({
                                 <Button
                                   onClick={() => handleReview(selectedApplication.id, 'approved')}
                                   className="bg-green-600 hover:bg-green-700 flex items-center gap-2"
-                                  disabled={processingApproval}
                                 >
-                                  {processingApproval ? (
-                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                                  ) : (
-                                    <CheckCircle className="h-4 w-4" />
-                                  )}
-                                  {processingApproval ? 'Creating Payee...' : 'Approve'}
+                                  <CheckCircle className="h-4 w-4" />
+                                  Approve
                                 </Button>
                                 <Button
                                   onClick={() => handleReview(selectedApplication.id, 'rejected')}
                                   variant="destructive"
                                   className="flex items-center gap-2"
-                                  disabled={processingApproval}
                                 >
                                   <XCircle className="h-4 w-4" />
                                   Reject

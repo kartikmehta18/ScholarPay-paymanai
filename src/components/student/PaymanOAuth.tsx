@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -5,7 +6,6 @@ import { Badge } from '@/components/ui/badge';
 import { Wallet, Shield, CheckCircle, AlertCircle } from 'lucide-react';
 import { paymanService } from '@/services/paymanService';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
 
 interface PaymanOAuthProps {
   onAuthSuccess?: (accessToken: string) => void;
@@ -14,21 +14,14 @@ interface PaymanOAuthProps {
 const PaymanOAuth: React.FC<PaymanOAuthProps> = ({ onAuthSuccess }) => {
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
-  const [isVerified, setIsVerified] = useState(false);
   const { toast } = useToast();
-  const { accessToken } = useAuth();
 
   useEffect(() => {
-    // Check authentication and verification status
-    const connected = paymanService.isAuthenticated();
-    setIsConnected(connected);
-    
-    // Set Supabase token in PaymanService for verification
-    if (accessToken) {
-      paymanService.setSupabaseToken(accessToken);
-      const verified = paymanService.isTokenVerified();
-      setIsVerified(verified);
-      console.log('Token verification status:', verified);
+    // Check if already connected
+    const token = localStorage.getItem('payman_access_token');
+    if (token) {
+      setIsConnected(true);
+      paymanService.initializeWithToken(token, 3600);
     }
 
     // Listen for OAuth callback messages
@@ -44,14 +37,26 @@ const PaymanOAuth: React.FC<PaymanOAuthProps> = ({ onAuthSuccess }) => {
 
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  }, [accessToken]);
+  }, []);
 
   const exchangeCodeForToken = async (code: string) => {
     try {
       setIsConnecting(true);
       
-      const { accessToken, expiresIn } = await paymanService.exchangeCodeForToken(code);
+      // Simulate token exchange (in a real app, this would be a backend call)
+      // For demo purposes, we'll use a mock token
+      const mockTokenResponse = {
+        accessToken: `mock_token_${code}_${Date.now()}`,
+        expiresIn: 3600
+      };
+
+      const { accessToken, expiresIn } = mockTokenResponse;
       
+      // Store token and initialize service
+      localStorage.setItem('payman_access_token', accessToken);
+      localStorage.setItem('payman_token_expiry', (Date.now() + expiresIn * 1000).toString());
+      
+      paymanService.initializeWithToken(accessToken, expiresIn);
       setIsConnected(true);
       
       toast({
@@ -74,44 +79,42 @@ const PaymanOAuth: React.FC<PaymanOAuthProps> = ({ onAuthSuccess }) => {
     }
   };
 
-  const handleConnect = async () => {
+  const handleConnect = () => {
     setIsConnecting(true);
     
-    try {
-      const authUrl = await paymanService.initiateOAuthLogin();
-      
-      // Open OAuth URL in a popup
-      const popup = window.open(
-        authUrl,
-        'payman-oauth',
-        'width=500,height=600,scrollbars=yes,resizable=yes'
-      );
-      
-      if (!popup) {
-        throw new Error('Popup blocked. Please allow popups for this site.');
-      }
-      
-      // Monitor popup closure
-      const checkClosed = setInterval(() => {
-        if (popup.closed) {
-          clearInterval(checkClosed);
-          setIsConnecting(false);
+    // Create the Payman connect button dynamically
+    const connectDiv = document.createElement('div');
+    connectDiv.id = 'payman-connect-temp';
+    document.body.appendChild(connectDiv);
+
+    const script = document.createElement('script');
+    script.src = 'https://app.paymanai.com/js/pm.js';
+    script.setAttribute('data-client-id', 'pm-test-OWyu8jmZ3rFI5RLBN8WyJOXl');
+    script.setAttribute('data-scopes', 'read_balance,read_list_wallets,read_list_payees,read_list_transactions,write_create_payee,write_send_payment,write_create_wallet');
+    script.setAttribute('data-redirect-uri', `http://localhost:8080/`);
+    script.setAttribute('data-target', '#payman-connect-temp');
+    script.setAttribute('data-dark-mode', 'false');
+    script.setAttribute('data-styles', JSON.stringify({
+      borderRadius: "8px",
+      fontSize: "14px"
+    }));
+
+    script.onload = () => {
+      // Auto-click the connect button
+      setTimeout(() => {
+        const button = document.querySelector('#payman-connect-temp button');
+        if (button) {
+          (button as HTMLButtonElement).click();
         }
-      }, 1000);
-      
-    } catch (error) {
-      console.error('Error initiating OAuth:', error);
-      toast({
-        title: "Error",
-        description: "Failed to initiate Payman connection",
-        variant: "destructive"
-      });
-      setIsConnecting(false);
-    }
+      }, 100);
+    };
+
+    document.head.appendChild(script);
   };
 
   const handleDisconnect = () => {
-    paymanService.clearAuth();
+    localStorage.removeItem('payman_access_token');
+    localStorage.removeItem('payman_token_expiry');
     setIsConnected(false);
     
     toast({
@@ -132,8 +135,8 @@ const PaymanOAuth: React.FC<PaymanOAuthProps> = ({ onAuthSuccess }) => {
         <div className="space-y-4">
           <div className="flex items-center justify-between p-4 border rounded-lg">
             <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-full ${isConnected && isVerified ? 'bg-green-100' : 'bg-gray-100'}`}>
-                {isConnected && isVerified ? (
+              <div className={`p-2 rounded-full ${isConnected ? 'bg-green-100' : 'bg-gray-100'}`}>
+                {isConnected ? (
                   <CheckCircle className="h-5 w-5 text-green-600" />
                 ) : (
                   <AlertCircle className="h-5 w-5 text-gray-600" />
@@ -141,15 +144,15 @@ const PaymanOAuth: React.FC<PaymanOAuthProps> = ({ onAuthSuccess }) => {
               </div>
               <div>
                 <p className="font-medium">
-                  {isConnected && isVerified ? 'Connected & Verified' : 'Not Connected'}
+                  {isConnected ? 'Connected to Payman' : 'Not Connected'}
                 </p>
                 <p className="text-sm text-gray-600">
-                  {isConnected && isVerified ? 'Tokens verified - ready for payments' : 'Connect to access payment features'}
+                  {isConnected ? 'You can now make payments' : 'Connect to access payment features'}
                 </p>
               </div>
             </div>
-            <Badge variant={isConnected && isVerified ? 'default' : 'secondary'}>
-              {isConnected && isVerified ? 'Verified' : 'Inactive'}
+            <Badge variant={isConnected ? 'default' : 'secondary'}>
+              {isConnected ? 'Active' : 'Inactive'}
             </Badge>
           </div>
 

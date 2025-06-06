@@ -138,7 +138,7 @@ const PaymanLoginButton: React.FC<PaymanLoginButtonProps> = ({
     }));
 
     script.onload = () => {
-
+      // Auto-click the Payman Connect button after it's loaded
       setTimeout(() => {
         const paymanButton = document.querySelector(`#${buttonContainerId} button`);
         if (paymanButton) {

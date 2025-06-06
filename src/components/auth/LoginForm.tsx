@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth, UserRole } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -6,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { GraduationCap, Building2, Loader2, AlertCircle } from 'lucide-react';
+import { GraduationCap, Building2, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface LoginFormProps {
@@ -37,7 +36,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, defaultRole =
     if (!success) {
       toast({
         title: "Login Failed",
-        description: "Invalid credentials or account not verified. Please check your email and password.",
+        description: "Invalid credentials. Please try again.",
         variant: "destructive"
       });
     } else {
@@ -81,7 +80,6 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, defaultRole =
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              disabled={isLoading}
             />
           </div>
 
@@ -94,17 +92,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, defaultRole =
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              disabled={isLoading}
             />
-          </div>
-
-          <div className="bg-blue-50 p-3 rounded border border-blue-200">
-            <div className="flex items-center gap-2 text-blue-800">
-              <AlertCircle className="h-4 w-4" />
-              <p className="text-sm">
-                New users need to register first and verify their email address.
-              </p>
-            </div>
           </div>
 
           <Button type="submit" className="w-full" disabled={isLoading}>
@@ -124,7 +112,6 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, defaultRole =
               type="button"
               onClick={onSwitchToRegister}
               className="text-blue-600 hover:underline font-medium"
-              disabled={isLoading}
             >
               Sign up
             </button>

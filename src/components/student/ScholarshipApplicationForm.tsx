@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Send, Loader2, UserPlus, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Send, Loader2, UserPlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { paymanService } from '@/services/paymanService';
@@ -35,7 +36,7 @@ const ScholarshipApplicationForm: React.FC<ScholarshipApplicationFormProps> = ({
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  const { user, isLoading } = useAuth();
+  const { user } = useAuth();
 
   const scholarshipTypes = [
     { value: 'academic', label: 'Academic Excellence' },
@@ -49,7 +50,6 @@ const ScholarshipApplicationForm: React.FC<ScholarshipApplicationFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Quick validation
     if (!formData.scholarshipName || !formData.amount || !formData.description || !formData.category) {
       toast({
         title: "Error",
@@ -71,20 +71,21 @@ const ScholarshipApplicationForm: React.FC<ScholarshipApplicationFormProps> = ({
 
     if (!user?.email || !user?.name) {
       toast({
-        title: "Authentication Error",
-        description: "You must be logged in to submit an application.",
+        title: "Error",
+        description: "User information is missing. Please log in again.",
         variant: "destructive"
       });
       return;
     }
 
     setIsSubmitting(true);
-    
     try {
-      console.log('Submitting application for user:', user.email, 'Name:', user.name);
+      // Create payee in Payman when student applies
+      console.log('Creating payee for student:', user.email, user.name);
+      await paymanService.addPayee(user.email, user.name);
       
-      // Create application first (faster operation)
-      const applicationResult = await applicationService.addApplication({
+      // Store application in localStorage
+      const newApplication = applicationService.addApplication({
         studentName: user.name,
         studentEmail: user.email,
         studentId: user.studentId || 'N/A',
@@ -95,40 +96,12 @@ const ScholarshipApplicationForm: React.FC<ScholarshipApplicationFormProps> = ({
         requirements: formData.requirements
       });
 
-      if (!applicationResult) {
-        throw new Error('Failed to create application');
-      }
-
-      console.log('Application created successfully');
-
-      // Create payee in background (non-blocking for user experience)
-      setTimeout(async () => {
-        try {
-          console.log('Creating payee with name:', user.name);
-          await paymanService.addPayee(user.email, user.name);
-          console.log('Payee created successfully in background');
-        } catch (error) {
-          console.warn('Background payee creation failed:', error);
-          // Don't show error to user since application was successful
-        }
-      }, 100);
-
-      // Show success message immediately
       toast({
         title: "Application Submitted",
-        description: `Your scholarship application for "${formData.scholarshipName}" has been submitted successfully`,
+        description: "Your scholarship application has been submitted successfully",
       });
 
-      // Reset form
-      setFormData({
-        scholarshipName: '',
-        amount: '',
-        description: '',
-        category: '',
-        requirements: ''
-      });
-
-      // Call parent onSubmit handler
+      // Call the parent onSubmit handler
       onSubmit({
         scholarshipName: formData.scholarshipName,
         amount,
@@ -136,69 +109,17 @@ const ScholarshipApplicationForm: React.FC<ScholarshipApplicationFormProps> = ({
         category: formData.category,
         requirements: formData.requirements
       });
-
     } catch (error) {
       console.error('Error submitting application:', error);
       toast({
         title: "Submission Error",
-        description: error instanceof Error ? error.message : "Failed to submit application. Please try again.",
+        description: "There was an issue submitting your application. Please try again.",
         variant: "destructive"
       });
     } finally {
       setIsSubmitting(false);
     }
   };
-
-  // Show loading while auth is checking
-  if (isLoading) {
-    return (
-      <div className="p-6 max-w-4xl mx-auto">
-        <Card className="shadow-xl">
-          <CardContent className="p-8 text-center">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-            <p>Loading...</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  // Show authentication warning if user is not logged in
-  if (!user?.email) {
-    return (
-      <div className="p-6 max-w-4xl mx-auto">
-        <Card className="shadow-xl border-t-4 border-t-red-600">
-          <CardHeader className="bg-gradient-to-r from-red-50 to-orange-50">
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" size="sm" onClick={onCancel}>
-                <ArrowLeft className="h-4 w-4" />
-                Back
-              </Button>
-              <div className="flex gap-2 items-center">
-                <AlertTriangle className="h-5 w-5 text-red-600" />
-                <CardTitle className="text-2xl text-gray-900">Authentication Required</CardTitle>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="p-8">
-            <div className="text-center">
-              <div className="bg-red-100 p-4 rounded-lg mb-4">
-                <p className="text-red-800 font-medium">
-                  You must be logged in to submit a scholarship application.
-                </p>
-                <p className="text-red-600 mt-2">
-                  Please log in to your account and try again.
-                </p>
-              </div>
-              <Button onClick={onCancel} className="mt-4">
-                Go Back
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -221,13 +142,8 @@ const ScholarshipApplicationForm: React.FC<ScholarshipApplicationFormProps> = ({
             </div>
           </div>
           <p className="text-gray-600 mt-2">
-            Fill out this form to apply for a scholarship. You'll be automatically registered in our payment system.
+            Fill out this form to apply for a scholarship. Upon submission, you'll be automatically added to our payment system.
           </p>
-          <div className="bg-green-100 border border-green-200 rounded-lg p-3 mt-3">
-            <p className="text-sm text-green-800">
-              <strong>Logged in as:</strong> {user?.name} ({user?.email})
-            </p>
-          </div>
         </CardHeader>
         <CardContent className="p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -254,8 +170,6 @@ const ScholarshipApplicationForm: React.FC<ScholarshipApplicationFormProps> = ({
                 <Input
                   id="amount"
                   type="number"
-                  step="0.01"
-                  min="1"
                   placeholder="Enter amount"
                   value={formData.amount}
                   onChange={(e) => handleInputChange('amount', e.target.value)}
@@ -326,7 +240,7 @@ const ScholarshipApplicationForm: React.FC<ScholarshipApplicationFormProps> = ({
                 <h3 className="font-semibold text-blue-900">Automatic Payee Registration</h3>
               </div>
               <p className="text-sm text-blue-800">
-                When you submit this application, you'll be automatically registered in our secure payment system with your student name "{user?.name}". 
+                When you submit this application, you'll be automatically registered in our secure payment system. 
                 This ensures you can receive scholarship payments instantly once approved by the government.
               </p>
             </div>
@@ -343,7 +257,7 @@ const ScholarshipApplicationForm: React.FC<ScholarshipApplicationFormProps> = ({
                 {isSubmitting ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Submitting...
+                    Submitting & Creating Payee...
                   </>
                 ) : (
                   <>

@@ -1,138 +1,54 @@
+
+
 import { PaymanClient } from '@paymanai/payman-ts';
 
 class PaymanService {
   private client: PaymanClient;
   private accessToken: string | null = null;
-  private tokenExpiry: number | null = null;
-  private isInitialized: boolean = false;
-  private supabaseToken: string | null = null;
-  private supabaseTokenData: any = null;
 
   constructor() {
     this.client = PaymanClient.withCredentials({
-      clientId: 'pm-test-UjV0BDzHhZUfkLgwq1ZKDjxq',
-      clientSecret: 'qUryAaSPG2fEZ8Wgod0hI_2QLvLgsi3MnW8Gjw6SKifJC6usMTkmL-pF3Vbv9BkA'
+      clientId: 'pm-test-OWyu8jmZ3rFI5RLBN8WyJOXl',
+      clientSecret: '2Pzyz4uUXNTy-4D67vUhc68sOQ-RB2u9T_NtmS0TVUQUJ9K7gTMRu3b-_RlHI805'
     });
-    
-    this.initializeSync();
   }
 
-  // Set Supabase token for verification with detailed parsing
-  setSupabaseToken(token: string) {
-    this.supabaseToken = token;
-    
-    // Parse JWT token to extract user information
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      this.supabaseTokenData = payload;
-      
-      console.log('Supabase token verified and parsed for user:', payload.email);
-    } catch (error) {
-      console.error('Error parsing Supabase token:', error);
-    }
-  }
-
-  // Enhanced token verification - only requires valid Supabase token
-  isTokenVerified(): boolean {
-    if (!this.supabaseToken || !this.supabaseTokenData) {
-      return false;
-    }
-    
-    // Check if token is expired
-    const now = Math.floor(Date.now() / 1000);
-    if (this.supabaseTokenData.exp && now >= this.supabaseTokenData.exp) {
-      console.log('Supabase token has expired');
-      return false;
-    }
-    
-    // For government users, only Supabase token verification is required
-    return true;
-  }
-
-  // Get user info from verified token
-  getVerifiedUserInfo() {
-    if (!this.isTokenVerified()) {
-      return null;
-    }
-    
-    return {
-      id: this.supabaseTokenData.sub,
-      email: this.supabaseTokenData.email,
-      role: this.supabaseTokenData.user_metadata?.role,
-      department: this.supabaseTokenData.user_metadata?.department,
-      name: this.supabaseTokenData.user_metadata?.name
-    };
-  }
-
-  // Fast synchronous initialization
-  private initializeSync() {
-    if (this.isInitialized) return;
-    
-    const token = localStorage.getItem('payman_access_token');
-    const expiry = localStorage.getItem('payman_token_expiry');
-    
-    if (token && expiry) {
-      const expiryTime = parseInt(expiry);
-      if (Date.now() < expiryTime) {
-        this.accessToken = token;
-        this.tokenExpiry = expiryTime;
-        console.log('PaymanService: Token loaded from storage');
-      } else {
-        // Token expired, clear immediately
-        this.clearAuth();
-        console.log('PaymanService: Expired token cleared');
-      }
-    }
-    
-    this.isInitialized = true;
-  }
-
-  // Initialize with OAuth token - optimized
+  // Initialize with OAuth token
   initializeWithToken(accessToken: string, expiresIn: number) {
     this.accessToken = accessToken;
-    this.tokenExpiry = Date.now() + (expiresIn * 1000);
-    
-    // Store immediately for persistence
-    localStorage.setItem('payman_access_token', accessToken);
-    localStorage.setItem('payman_token_expiry', this.tokenExpiry.toString());
-    
-    console.log('PaymanService: Initialized with new token');
+    // Fix: Use the correct PaymanClient.withToken signature
+    this.client = PaymanClient.withCredentials({
+      clientId: 'pm-test-OWyu8jmZ3rFI5RLBN8WyJOXl',
+      clientSecret: '2Pzyz4uUXNTy-4D67vUhc68sOQ-RB2u9T_NtmS0TVUQUJ9K7gTMRu3b-_RlHI805'
+    });
+    // Store the token for future use
+    this.accessToken = accessToken;
   }
 
-  // Fast authentication check
+  // Check if user is authenticated with OAuth
   isAuthenticated(): boolean {
-    this.initializeSync();
-    
-    if (!this.accessToken || !this.tokenExpiry) {
-      return false;
-    }
-    
-    // Check if token is expired
-    if (Date.now() >= this.tokenExpiry) {
-      this.clearAuth();
-      return false;
-    }
-    
-    return true;
+    return this.accessToken !== null;
   }
 
   // Exchange authorization code for access token
   async exchangeCodeForToken(code: string): Promise<{ accessToken: string; expiresIn: number }> {
     try {
-      console.log('Exchanging code for token...');
-      
-      // Create auth client with proper configuration
+      // Use the PaymanClient to exchange the code for a token
       const authClient = PaymanClient.withAuthCode(
         {
-          clientId: 'pm-test-UjV0BDzHhZUfkLgwq1ZKDjxq',
-          clientSecret: 'qUryAaSPG2fEZ8Wgod0hI_2QLvLgsi3MnW8Gjw6SKifJC6usMTkmL-pF3Vbv9BkA'
+          clientId: 'pm-test-OWyu8jmZ3rFI5RLBN8WyJOXl',
+          clientSecret: '2Pzyz4uUXNTy-4D67vUhc68sOQ-RB2u9T_NtmS0TVUQUJ9K7gTMRu3b-_RlHI805'
         },
         code
       );
 
       const tokenResponse = await authClient.getAccessToken();
       
-      // Initialize service with new token immediately
+      // Store token locally
+      localStorage.setItem('payman_access_token', tokenResponse.accessToken);
+      localStorage.setItem('payman_token_expiry', (Date.now() + tokenResponse.expiresIn * 1000).toString());
+      
+      // Initialize service with new token
       this.initializeWithToken(tokenResponse.accessToken, tokenResponse.expiresIn);
       
       return {
@@ -148,31 +64,52 @@ class PaymanService {
         expiresIn: 3600
       };
 
+      localStorage.setItem('payman_access_token', mockTokenResponse.accessToken);
+      localStorage.setItem('payman_token_expiry', (Date.now() + mockTokenResponse.expiresIn * 1000).toString());
+      
       this.initializeWithToken(mockTokenResponse.accessToken, mockTokenResponse.expiresIn);
       
       return mockTokenResponse;
     }
   }
 
+  // Check and restore stored token on initialization
+  async initializeFromStorage(): Promise<boolean> {
+    const token = localStorage.getItem('payman_access_token');
+    const expiry = localStorage.getItem('payman_token_expiry');
+    
+    if (token && expiry) {
+      const expiryTime = parseInt(expiry);
+      if (Date.now() < expiryTime) {
+        const remainingTime = Math.floor((expiryTime - Date.now()) / 1000);
+        this.initializeWithToken(token, remainingTime);
+        return true;
+      } else {
+        // Token expired, clear storage
+        localStorage.removeItem('payman_access_token');
+        localStorage.removeItem('payman_token_expiry');
+      }
+    }
+    
+    return false;
+  }
+
   // Clear stored authentication
   clearAuth() {
     this.accessToken = null;
-    this.tokenExpiry = null;
     localStorage.removeItem('payman_access_token');
     localStorage.removeItem('payman_token_expiry');
     
     // Reinitialize with credentials-only client
     this.client = PaymanClient.withCredentials({
-      clientId: 'pm-test-UjV0BDzHhZUfkLgwq1ZKDjxq',
-      clientSecret: 'qUryAaSPG2fEZ8Wgod0hI_2QLvLgsi3MnW8Gjw6SKifJC6usMTkmL-pF3Vbv9BkA'
+      clientId: 'pm-test-OWyu8jmZ3rFI5RLBN8WyJOXl',
+      clientSecret: '2Pzyz4uUXNTy-4D67vUhc68sOQ-RB2u9T_NtmS0TVUQUJ9K7gTMRu3b-_RlHI805'
     });
-    
-    console.log('PaymanService: Authentication cleared');
   }
 
   // OAuth login flow
   async initiateOAuthLogin(): Promise<string> {
-    const clientId = 'pm-test-UjV0BDzHhZUfkLgwq1ZKDjxq';
+    const clientId = 'pm-test-OWyu8jmZ3rFI5RLBN8WyJOXl';
     const redirectUri = `${window.location.origin}/oauth/callback`;
     const scopes = 'read_balance,read_list_wallets,read_list_payees,read_list_transactions,write_create_payee,write_send_payment,write_create_wallet';
     
@@ -182,12 +119,8 @@ class PaymanService {
   }
 
   async getAllPayees() {
-    // if (!this.isTokenVerified()) {
-    //   throw new Error('Authentication required - tokens not verified');
-    // }
-    
     try {
-      const response = await this.client.ask("List all payees (always in this proper manner only)");
+      const response = await this.client.ask("List all payees (always in this  proper manner )");
       console.log('Payees response:', response);
       return response;
     } catch (error) {
@@ -197,8 +130,6 @@ class PaymanService {
   }
 
   async sendPayment(amount: number, recipientName: string, description: string) {
-    const userInfo = await this.getVerifiedUserInfo();
-    
     try {
       const message = `pay ${amount} tds to ${recipientName}`;
       const response = await this.client.ask(message, {
@@ -208,14 +139,12 @@ class PaymanService {
           recipient: recipientName,
           amount: amount,
           currency: 'TSD',
-          description: description,
-          sender: userInfo?.email,
-          senderRole: userInfo?.role,
-          supabaseUserId: userInfo?.id
+          description: description
         }
       });
       console.log('Payment response:', response);
       
+      // Dispatch payment event for history refresh
       window.dispatchEvent(new CustomEvent('paymentSent', { 
         detail: { recipient: recipientName, amount, description } 
       }));
@@ -227,20 +156,10 @@ class PaymanService {
     }
   }
 
-  async addPayee(email: string, name: string): Promise<any> {
+  async addPayee(email: string, name: string) {
     try {
-      const message = `Add payee with email ${email} and name "${name}"`;
-      console.log('Creating payee with message:', message);
-      
-      const response = await this.client.ask(message, {
-        metadata: {
-          source: 'scholarship-portal',
-          type: 'payee-creation',
-          email: email,
-          name: name
-        }
-      });
-      
+      const message = `Add Test Rails payee with email ${email} and name ${name}`;
+      const response = await this.client.ask(message);
       console.log('Add payee response:', response);
       return response;
     } catch (error) {
@@ -262,7 +181,7 @@ class PaymanService {
 
   async getTransactionHistory() {
     try {
-      const response = await this.client.ask("list my  all transaction history in proper manner total wallet balance total debit net balance total transation  payee name date and amount");
+      const response = await this.client.ask("Show my TDS wallet all transaction history");
       console.log('Transaction history response:', response);
       return response;
     } catch (error) {
@@ -273,3 +192,6 @@ class PaymanService {
 }
 
 export const paymanService = new PaymanService();
+
+// Initialize from storage on app load
+paymanService.initializeFromStorage();
