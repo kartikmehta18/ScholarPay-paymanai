@@ -46,23 +46,18 @@
 //   const [user, setUser] = useState<User | null>(null);
 //   const [session, setSession] = useState<Session | null>(null);
 //   const [accessToken, setAccessToken] = useState<string | null>(null);
-//   const [isLoading, setIsLoading] = useState(true);
-//   const [initialized, setInitialized] = useState(false);
+//   const [isLoading, setIsLoading] = useState(true);  // Initially set to true, loader will appear until initialization is complete
+//   const [initialized, setInitialized] = useState(false);  // Ensures we only initialize once
 
-//   // Optimized user profile fetching with token verification
 //   const fetchUserProfile = async (supabaseUser: SupabaseUser, userSession: Session): Promise<User | null> => {
 //     try {
-//       // Store and verify access token from session
 //       if (userSession.access_token) {
 //         setAccessToken(userSession.access_token);
 //         console.log('Access token verified from Supabase session:', {
-//           token: userSession.access_token.substring(0, 20) + '...',
-//           expires_at: userSession.expires_at,
-//           user_id: supabaseUser.id,
-//           email: supabaseUser.email
+//           token: userSession.access_token.substring(0, 20) + '...'
 //         });
 //       }
-      
+
 //       const { data: profile, error } = await supabase
 //         .from('profiles')
 //         .select('*')
@@ -92,12 +87,15 @@
 //   };
 
 //   useEffect(() => {
-//     if (initialized) return;
-
 //     const initializeAuth = async () => {
 //       try {
+//         // Clear session and token from local storage on page reload
+//         localStorage.removeItem('supabase.auth.token');
+//         setUser(null);
+//         setAccessToken(null);
+
 //         const { data: { session }, error } = await supabase.auth.getSession();
-        
+
 //         if (error) {
 //           console.error('Session error:', error);
 //           setIsLoading(false);
@@ -106,7 +104,7 @@
 //         }
 
 //         setSession(session);
-        
+
 //         if (session?.user) {
 //           const userProfile = await fetchUserProfile(session.user, session);
 //           setUser(userProfile);
@@ -114,28 +112,26 @@
 //       } catch (error) {
 //         console.error('Auth initialization error:', error);
 //       } finally {
-//         setIsLoading(false);
-//         setInitialized(true);
+//         setIsLoading(false);  // Stop loading after session is checked
+//         setInitialized(true); // Mark as initialized
 //       }
 //     };
 
-//     // Set up auth state listener with optimized logging
 //     const { data: { subscription } } = supabase.auth.onAuthStateChange(
 //       async (event, session) => {
 //         console.log(`Auth state changed: ${event}`);
 //         setSession(session);
-        
+
 //         if (session?.user) {
 //           const userProfile = await fetchUserProfile(session.user, session);
 //           setUser(userProfile);
 //         } else {
 //           setUser(null);
 //           setAccessToken(null);
+//           localStorage.removeItem('supabase.auth.token'); // Clear token from localStorage
 //         }
-        
-//         if (initialized) {
-//           setIsLoading(false);
-//         }
+
+//         setIsLoading(false);  // Stop loading after state change is processed
 //       }
 //     );
 
@@ -149,8 +145,6 @@
 //   const login = async (email: string, password: string, role: UserRole): Promise<boolean> => {
 //     setIsLoading(true);
 //     try {
-//       console.log('Attempting login for:', email);
-      
 //       const { data, error } = await supabase.auth.signInWithPassword({
 //         email,
 //         password,
@@ -175,15 +169,13 @@
 //       console.error('Login failed:', error);
 //       return false;
 //     } finally {
-//       setIsLoading(false);
+//       setIsLoading(false);  // Stop loading after login attempt
 //     }
 //   };
 
 //   const register = async (userData: RegisterData): Promise<boolean> => {
 //     setIsLoading(true);
 //     try {
-//       console.log('Attempting registration for:', userData.email);
-      
 //       const { data, error } = await supabase.auth.signUp({
 //         email: userData.email,
 //         password: userData.password,
@@ -213,7 +205,7 @@
 //       console.error('Registration failed:', error);
 //       return false;
 //     } finally {
-//       setIsLoading(false);
+//       setIsLoading(false);  // Stop loading after registration attempt
 //     }
 //   };
 
@@ -223,11 +215,13 @@
 //       await supabase.auth.signOut();
 //       setUser(null);
 //       setSession(null);
+//       setAccessToken(null);
+//       localStorage.removeItem('supabase.auth.token'); // Remove the token from localStorage
 //       console.log('Logout successful');
 //     } catch (error) {
 //       console.error('Logout error:', error);
 //     } finally {
-//       setIsLoading(false);
+//       setIsLoading(false);  // Stop loading after logout
 //     }
 //   };
 
@@ -237,6 +231,7 @@
 //     </AuthContext.Provider>
 //   );
 // };
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
@@ -284,16 +279,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);  // Initially set to true, loader will appear until initialization is complete
-  const [initialized, setInitialized] = useState(false);  // Ensures we only initialize once
+  const [isLoading, setIsLoading] = useState(true);
+  const [initialized, setInitialized] = useState(false);
+
+  // Cache for user profiles to avoid repeated fetches
+  const [profileCache, setProfileCache] = useState<Map<string, User>>(new Map());
 
   const fetchUserProfile = async (supabaseUser: SupabaseUser, userSession: Session): Promise<User | null> => {
     try {
+      // Check cache first
+      const cachedProfile = profileCache.get(supabaseUser.id);
+      if (cachedProfile) {
+        console.log('Using cached user profile:', cachedProfile.name);
+        return cachedProfile;
+      }
+
+      // Set access token immediately
       if (userSession.access_token) {
         setAccessToken(userSession.access_token);
-        console.log('Access token verified from Supabase session:', {
-          token: userSession.access_token.substring(0, 20) + '...'
-        });
       }
 
       const { data: profile, error } = await supabase
@@ -316,7 +319,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         department: profile.department || undefined
       };
 
-      console.log('User profile loaded successfully:', userProfile.name);
+      // Cache the profile
+      setProfileCache(prev => new Map(prev).set(supabaseUser.id, userProfile));
+      console.log('User profile loaded and cached:', userProfile.name);
       return userProfile;
     } catch (error) {
       console.error('Error fetching user profile:', error);
@@ -325,14 +330,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
+    if (initialized) return;
+
+    let mounted = true;
+
     const initializeAuth = async () => {
       try {
-        // Clear session and token from local storage on page reload
-        localStorage.removeItem('supabase.auth.token');
-        setUser(null);
-        setAccessToken(null);
-
+        // Get session immediately without delays
         const { data: { session }, error } = await supabase.auth.getSession();
+
+        if (!mounted) return;
 
         if (error) {
           console.error('Session error:', error);
@@ -344,44 +351,58 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(session);
 
         if (session?.user) {
-          const userProfile = await fetchUserProfile(session.user, session);
-          setUser(userProfile);
+          // Fetch profile in background, don't block UI
+          fetchUserProfile(session.user, session).then(userProfile => {
+            if (mounted && userProfile) {
+              setUser(userProfile);
+            }
+          });
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
       } finally {
-        setIsLoading(false);  // Stop loading after session is checked
-        setInitialized(true); // Mark as initialized
+        if (mounted) {
+          setIsLoading(false);
+          setInitialized(true);
+        }
       }
     };
 
+    // Set up auth state listener with optimized handling
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        if (!mounted) return;
+
         console.log(`Auth state changed: ${event}`);
         setSession(session);
 
         if (session?.user) {
-          const userProfile = await fetchUserProfile(session.user, session);
-          setUser(userProfile);
+          // Don't block on profile fetch
+          fetchUserProfile(session.user, session).then(userProfile => {
+            if (mounted && userProfile) {
+              setUser(userProfile);
+            }
+          });
         } else {
           setUser(null);
           setAccessToken(null);
-          localStorage.removeItem('supabase.auth.token'); // Clear token from localStorage
+          setProfileCache(new Map()); // Clear cache on logout
         }
 
-        setIsLoading(false);  // Stop loading after state change is processed
+        // Always stop loading after auth state change
+        setIsLoading(false);
       }
     );
 
     initializeAuth();
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
-  }, [initialized]);
+  }, [initialized, profileCache]);
 
   const login = async (email: string, password: string, role: UserRole): Promise<boolean> => {
-    setIsLoading(true);
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -406,13 +427,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       console.error('Login failed:', error);
       return false;
-    } finally {
-      setIsLoading(false);  // Stop loading after login attempt
     }
   };
 
   const register = async (userData: RegisterData): Promise<boolean> => {
-    setIsLoading(true);
     try {
       const { data, error } = await supabase.auth.signUp({
         email: userData.email,
@@ -442,24 +460,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       console.error('Registration failed:', error);
       return false;
-    } finally {
-      setIsLoading(false);  // Stop loading after registration attempt
     }
   };
 
   const logout = async () => {
-    setIsLoading(true);
     try {
       await supabase.auth.signOut();
       setUser(null);
       setSession(null);
       setAccessToken(null);
-      localStorage.removeItem('supabase.auth.token'); // Remove the token from localStorage
+      setProfileCache(new Map()); // Clear cache
       console.log('Logout successful');
     } catch (error) {
       console.error('Logout error:', error);
-    } finally {
-      setIsLoading(false);  // Stop loading after logout
     }
   };
 

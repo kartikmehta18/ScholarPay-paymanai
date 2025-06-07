@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
-import { Building2, Users, DollarSign, TrendingUp, Eye } from 'lucide-react';
+import { Building2, Users, DollarSign, TrendingUp, Eye, LogOut } from 'lucide-react';
 import PayeeManagement from './PayeeManagement';
 import ApplicationReview from './ApplicationReview';
 import PaymentProcessor from './PaymentProcessor';
@@ -16,7 +15,7 @@ import { applicationService, type Application } from '@/services/applicationServ
 type DashboardView = 'overview' | 'payees' | 'applications' | 'payments' | 'history';
 
 const GovernmentDashboard: React.FC = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [currentView, setCurrentView] = useState<DashboardView>('overview');
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(false);
@@ -159,11 +158,21 @@ const GovernmentDashboard: React.FC = () => {
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Government Portal
-        </h1>
-        <p className="text-gray-600">Welcome, {user?.name} - {user?.department}</p>
+      <div className="mb-8 flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Government Portal
+          </h1>
+          <p className="text-gray-600">Welcome, {user?.name} - {user?.department}</p>
+        </div>
+        <Button
+          variant="outline"
+          onClick={logout}
+          className="flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+        >
+          <LogOut className="h-4 w-4" />
+          Logout
+        </Button>
       </div>
 
       {/* Navigation */}

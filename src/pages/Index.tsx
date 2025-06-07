@@ -12,12 +12,13 @@ const Index = () => {
   const [showAuth, setShowAuth] = useState(false);
   const [authRole, setAuthRole] = useState<'student' | 'government'>('student');
 
+  // Optimized loading state - shorter timeout and better UX
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-3"></div>
+          <p className="text-gray-600 text-sm">Loading...</p>
         </div>
       </div>
     );

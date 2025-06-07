@@ -139,9 +139,11 @@ const ApplicationReview: React.FC<ApplicationReviewProps> = ({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span className="ml-2">Loading applications...</span>
+      <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center">
+        <div className="bg-white p-6 rounded-lg shadow-lg flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <p className="text-lg font-medium text-gray-700">Loading Applications...</p>
+        </div>
       </div>
     );
   }
@@ -160,14 +162,14 @@ const ApplicationReview: React.FC<ApplicationReviewProps> = ({
             size="sm"
             onClick={loadApplications}
             disabled={loading}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 "
           >
             {loading ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
             ) : (
               <RefreshCw className="h-4 w-4" />
             )}
-            {loading ? 'Refreshing...' : 'Refresh'}
+            {loading ? 'Refreshing...' : 'Refresh Applications'}
           </Button>
         </CardHeader>
         <CardContent>
