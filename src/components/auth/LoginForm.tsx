@@ -1,68 +1,86 @@
 
 import React, { useState } from 'react';
-import { useAuth, UserRole } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { GraduationCap, Building2, Loader2, AlertCircle } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { Eye, EyeOff, User, Building2 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import PaymanLoginButton from '../PaymanLoginButton';
 
-interface LoginFormProps {
-  onSwitchToRegister: () => void;
-  defaultRole?: 'student' | 'government';
-}
+const LoginForm: React.FC = () => {
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [activeTab, setActiveTab] = useState('student');
+  
+  // Student login state
+  const [studentForm, setStudentForm] = useState({
+    email: '',
+    password: ''
+  });
+  
+  // Government login state  
+  const [governmentForm, setGovernmentForm] = useState({
+    email: '',
+    password: ''
+  });
 
-const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, defaultRole = 'student' }) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [role, setRole] = useState<UserRole>(defaultRole);
-  const { login, isLoading } = useAuth();
-  const { toast } = useToast();
+  const { login } = useAuth();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleStudentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!email || !password) {
-      toast({
-        title: "Error",
-        description: "Please fill in all fields",
-        variant: "destructive"
-      });
-      return;
-    }
+    setLoading(true);
+    setError('');
 
-    const success = await login(email, password, role);
-    if (!success) {
-      toast({
-        title: "Login Failed",
-        description: "Invalid credentials or account not verified. Please check your email and password.",
-        variant: "destructive"
-      });
-    } else {
-      toast({
-        title: "Welcome!",
-        description: `Successfully logged in as ${role}`,
-      });
+    try {
+      const success = await login(studentForm.email, studentForm.password, 'student');
+      if (!success) {
+        setError('Invalid email or password');
+      }
+    } catch (err) {
+      setError('Login failed. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
+  const handleGovernmentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      const success = await login(governmentForm.email, governmentForm.password, 'government');
+      if (!success) {
+        setError('Invalid email or password');
+      }
+    } catch (err) {
+      setError('Login failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePaymanSuccess = () => {
+    // Payman login successful, user will be redirected
+    console.log('Payman login successful');
+  };
+
   return (
-    <Card className="w-full max-w-md mx-auto">
-      <CardHeader className="text-center">
-        <div className="mx-auto mb-4 bg-blue-600 p-3 rounded-full w-fit">
-          <GraduationCap className="h-8 w-8 text-white" />
-        </div>
-        <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
-        <p className="text-gray-600">Sign in to your account</p>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Tabs value={role} onValueChange={(value) => setRole(value as UserRole)}>
+    <div className="w-full max-w-md mx-auto">
+      <Card>
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
+          <p className="text-gray-600">Sign in to your account</p>
+        </CardHeader>
+        <CardContent>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="student" className="flex items-center gap-2">
-                <GraduationCap className="h-4 w-4" />
+                <User className="h-4 w-4" />
                 Student
               </TabsTrigger>
               <TabsTrigger value="government" className="flex items-center gap-2">
@@ -70,68 +88,135 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, defaultRole =
                 Government
               </TabsTrigger>
             </TabsList>
+
+            <TabsContent value="student" className="space-y-4 mt-6">
+              <div className="space-y-4">
+                <PaymanLoginButton 
+                  onSuccess={handlePaymanSuccess}
+                  className="w-full"
+                  variant="outline"
+                />
+                
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-2 text-muted-foreground">
+                      Or continue with email
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <form onSubmit={handleStudentSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="student-email">Email</Label>
+                  <Input
+                    id="student-email"
+                    type="email"
+                    placeholder="student@university.edu"
+                    value={studentForm.email}
+                    onChange={(e) => setStudentForm(prev => ({ ...prev, email: e.target.value }))}
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="student-password">Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="student-password"
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="Enter your password"
+                      value={studentForm.password}
+                      onChange={(e) => setStudentForm(prev => ({ ...prev, password: e.target.value }))}
+                      required
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
+                {error && activeTab === 'student' && (
+                  <Alert variant="destructive">
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
+
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? 'Signing in...' : 'Sign In'}
+                </Button>
+              </form>
+            </TabsContent>
+
+            <TabsContent value="government" className="space-y-4 mt-6">
+              <form onSubmit={handleGovernmentSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="gov-email">Government Email</Label>
+                  <Input
+                    id="gov-email"
+                    type="email"
+                    placeholder="official@government.edu"
+                    value={governmentForm.email}
+                    onChange={(e) => setGovernmentForm(prev => ({ ...prev, email: e.target.value }))}
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="gov-password">Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="gov-password"
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="Enter your password"
+                      value={governmentForm.password}
+                      onChange={(e) => setGovernmentForm(prev => ({ ...prev, password: e.target.value }))}
+                      required
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
+                {error && activeTab === 'government' && (
+                  <Alert variant="destructive">
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
+
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? 'Signing in...' : 'Sign In'}
+                </Button>
+              </form>
+            </TabsContent>
           </Tabs>
-
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              disabled={isLoading}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              disabled={isLoading}
-            />
-          </div>
-
-          <div className="bg-blue-50 p-3 rounded border border-blue-200">
-            <div className="flex items-center gap-2 text-blue-800">
-              <AlertCircle className="h-4 w-4" />
-              <p className="text-sm">
-                New users need to register first and verify their email address.
-              </p>
-            </div>
-          </div>
-
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Signing in...
-              </>
-            ) : (
-              'Sign In'
-            )}
-          </Button>
-
-          <div className="text-center text-sm">
-            <span className="text-gray-600">Don't have an account? </span>
-            <button
-              type="button"
-              onClick={onSwitchToRegister}
-              className="text-blue-600 hover:underline font-medium"
-              disabled={isLoading}
-            >
-              Sign up
-            </button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

@@ -37,7 +37,7 @@ const PayeeManagement: React.FC = () => {
 
   const parsePayeesFromResponse = (response: any): Payee[] => {
     try {
-      console.log('Parsing payees from response:', response);
+      console.log('Parsing payees from Payman SDK response:', response);
       
       if (response.artifacts && response.artifacts.length > 0) {
         const artifact = response.artifacts[0];
@@ -49,7 +49,7 @@ const PayeeManagement: React.FC = () => {
           content = artifact.text;
         }
         
-        console.log('Payee content:', content);
+        console.log('Payee content from Payman SDK:', content);
         
         const lines = content.split('\n');
         const payees: Payee[] = [];
@@ -84,13 +84,13 @@ const PayeeManagement: React.FC = () => {
           }
         });
         
-        console.log('Parsed payees:', payees);
+        console.log('Parsed payees from Payman SDK:', payees);
         return payees;
       }
       
       return [];
     } catch (error) {
-      console.error('Error parsing payees:', error);
+      console.error('Error parsing payees from Payman SDK:', error);
       return [];
     }
   };
@@ -99,7 +99,7 @@ const PayeeManagement: React.FC = () => {
     setLoading(true);
     try {
       const response = await paymanService.getAllPayees();
-      console.log('Raw payees response:', response);
+      console.log('Raw payees response from Payman SDK:', response);
       
       const parsedPayees = parsePayeesFromResponse(response);
       setPayees(parsedPayees);
@@ -109,37 +109,15 @@ const PayeeManagement: React.FC = () => {
         description: `Loaded ${parsedPayees.length} payees from Payman SDK`,
       });
     } catch (error) {
-      console.error('Error loading payees:', error);
+      console.error('Error loading payees from Payman SDK:', error);
       toast({
         title: "Error",
         description: "Failed to load payees from Payman SDK",
         variant: "destructive"
       });
       
-      // Set fallback mock data if API fails
-      setPayees([
-        {
-          id: '1',
-          name: 'sahaj jain',
-          email: 'sahaj.jain@example.com',
-          status: 'active',
-          addedDate: '2024-01-15'
-        },
-        {
-          id: '2',
-          name: 'kartik design',
-          email: 'kartik.design@example.com',
-          status: 'active',
-          addedDate: '2024-02-01'
-        },
-        {
-          id: '3',
-          name: 'ritik jain',
-          email: 'ritik.jain@example.com',
-          status: 'active',
-          addedDate: '2024-02-01'
-        }
-      ]);
+      // Set empty array if API fails
+      setPayees([]);
     } finally {
       setLoading(false);
     }
@@ -160,7 +138,7 @@ const PayeeManagement: React.FC = () => {
     setAddingPayee(true);
     try {
       const response = await paymanService.addPayee(newPayee.email, newPayee.name);
-      console.log('Add payee response:', response);
+      console.log('Add payee response from Payman SDK:', response);
       
       const payee: Payee = {
         id: Math.random().toString(36).substr(2, 9),
@@ -176,15 +154,15 @@ const PayeeManagement: React.FC = () => {
       
       toast({
         title: "Success",
-        description: "Payee added successfully",
+        description: "Payee added successfully to Payman SDK",
       });
       
       setTimeout(() => loadPayees(), 1000);
     } catch (error) {
-      console.error('Error adding payee:', error);
+      console.error('Error adding payee to Payman SDK:', error);
       toast({
         title: "Error",
-        description: "Failed to add payee",
+        description: "Failed to add payee to Payman SDK",
         variant: "destructive"
       });
     } finally {
@@ -222,11 +200,11 @@ const PayeeManagement: React.FC = () => {
         paymentDialog.payee.name, // Use name instead of email
         paymentForm.description
       );
-      console.log('Payment response:', response);
+      console.log('Payment response from Payman SDK:', response);
       
       toast({
         title: "Success",
-        description: `Payment of TSD ${amount.toLocaleString()} sent to ${paymentDialog.payee.name}`,
+        description: `Payment of TSD ${amount.toLocaleString()} sent to ${paymentDialog.payee.name} via Payman SDK`,
       });
       
       // Reset form and close dialog
@@ -243,10 +221,10 @@ const PayeeManagement: React.FC = () => {
       }));
       
     } catch (error) {
-      console.error('Error sending payment:', error);
+      console.error('Error sending payment via Payman SDK:', error);
       toast({
         title: "Error",
-        description: "Failed to send payment",
+        description: "Failed to send payment via Payman SDK",
         variant: "destructive"
       });
     } finally {
@@ -265,7 +243,7 @@ const PayeeManagement: React.FC = () => {
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Users className="h-5 w-5" />
-            Payee Management
+            Payee Management (Payman SDK)
           </CardTitle>
           <div className="flex gap-2">
             <Button
@@ -290,7 +268,7 @@ const PayeeManagement: React.FC = () => {
           {showAddForm && (
             <Card className="mb-6 border-2 border-blue-200">
               <CardHeader>
-                <CardTitle className="text-lg">Add New Payee</CardTitle>
+                <CardTitle className="text-lg">Add New Payee to Payman SDK</CardTitle>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleAddPayee} className="space-y-4">
@@ -322,7 +300,7 @@ const PayeeManagement: React.FC = () => {
                       {addingPayee ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Adding...
+                          Adding to Payman SDK...
                         </>
                       ) : (
                         'Add Payee'
@@ -349,7 +327,7 @@ const PayeeManagement: React.FC = () => {
           ) : payees.length === 0 ? (
             <div className="text-center py-8">
               <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600">No payees found. Add your first payee!</p>
+              <p className="text-gray-600">No payees found in Payman SDK. Add your first payee!</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -403,7 +381,7 @@ const PayeeManagement: React.FC = () => {
                         </DialogTrigger>
                         <DialogContent>
                           <DialogHeader>
-                            <DialogTitle>Send Payment to {payee.name}</DialogTitle>
+                            <DialogTitle>Send Payment to {payee.name} via Payman SDK</DialogTitle>
                           </DialogHeader>
                           <form onSubmit={handleSendPayment} className="space-y-4">
                             <div className="space-y-2">
@@ -433,14 +411,14 @@ const PayeeManagement: React.FC = () => {
                                 <strong>Recipient:</strong> {payee.name}
                               </p>
                               <p className="text-xs text-blue-600 mt-1">
-                                Payment will be sent using the recipient's name: "{payee.name}"
+                                Payment will be sent using Payman SDK to: "{payee.name}"
                               </p>
                             </div>
                             <Button type="submit" disabled={sendingPayment} className="w-full">
                               {sendingPayment ? (
                                 <>
                                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                  Sending Payment...
+                                  Sending Payment via Payman SDK...
                                 </>
                               ) : (
                                 <>
