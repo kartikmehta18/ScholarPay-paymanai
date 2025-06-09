@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { paymanService } from '@/services/paymanService';
 import { applicationService } from '@/services/applicationService';
+import PayeeSelector from './PayeeSelector';
 
 interface ScholarshipApplicationFormProps {
   onSubmit: (application: {
@@ -18,6 +20,7 @@ interface ScholarshipApplicationFormProps {
     description: string;
     category: string;
     requirements: string;
+    preferredPayee?: string;
   }) => void;
   onCancel: () => void;
 }
@@ -31,7 +34,8 @@ const ScholarshipApplicationForm: React.FC<ScholarshipApplicationFormProps> = ({
     amount: '',
     description: '',
     category: '',
-    requirements: ''
+    requirements: '',
+    preferredPayee: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
@@ -125,7 +129,8 @@ const ScholarshipApplicationForm: React.FC<ScholarshipApplicationFormProps> = ({
         amount: '',
         description: '',
         category: '',
-        requirements: ''
+        requirements: '',
+        preferredPayee: ''
       });
 
       // Call parent onSubmit handler
@@ -134,7 +139,8 @@ const ScholarshipApplicationForm: React.FC<ScholarshipApplicationFormProps> = ({
         amount,
         description: formData.description,
         category: formData.category,
-        requirements: formData.requirements
+        requirements: formData.requirements,
+        preferredPayee: formData.preferredPayee
       });
 
     } catch (error) {
@@ -285,6 +291,14 @@ const ScholarshipApplicationForm: React.FC<ScholarshipApplicationFormProps> = ({
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="space-y-2">
+                <PayeeSelector
+                  selectedPayee={formData.preferredPayee}
+                  onPayeeChange={(value) => handleInputChange('preferredPayee', value)}
+                  disabled={isSubmitting}
+                />
               </div>
             </div>
 

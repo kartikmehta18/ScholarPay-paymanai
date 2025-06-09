@@ -27,16 +27,22 @@ const Auth: React.FC<AuthProps> = ({ defaultRole = 'student', onBack }) => {
           </Button>
         )}
         {isLogin ? (
-          <LoginForm 
-            onSwitchToRegister={() => setIsLogin(false)} 
-            defaultRole={defaultRole}
-          />
+          <LoginForm />
         ) : (
           <RegisterForm 
-            onSwitchToLogin={() => setIsLogin(true)} 
+            onSwitchToLogin={() => setIsLogin(true)}
             defaultRole={defaultRole}
           />
         )}
+        
+        <div className="mt-4 text-center">
+          <button
+            onClick={() => setIsLogin(!isLogin)}
+            className="text-sm text-blue-600 hover:text-blue-800"
+          >
+            {isLogin ? "Don't have an account? Register" : "Already have an account? Login"}
+          </button>
+        </div>
       </div>
     </div>
   );

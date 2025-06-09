@@ -154,7 +154,7 @@ const WalletOverview: React.FC = () => {
       const response = await paymanService.getWalletBalance();
       console.log('Wallet balance response:', response);
       
-      if (response && response.status?.toString() === 'COMPLETED') {
+      if (response && response.status === 'COMPLETED') {
         const parsedData = parseWalletData(response);
         setWalletData(parsedData);
         
@@ -183,7 +183,7 @@ const WalletOverview: React.FC = () => {
       const response = await paymanService.getTransactionHistory();
       console.log('Transaction history response:', response);
       
-      if (response && response.status?.toString() === 'COMPLETED') {
+      if (response && response.status === 'COMPLETED') {
         const transactions = parseTransactionHistory(response);
         setRecentTransactions(transactions);
       }
