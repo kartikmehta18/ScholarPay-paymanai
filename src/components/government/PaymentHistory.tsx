@@ -282,7 +282,7 @@ const PaymentHistory: React.FC = () => {
     <div className="space-y-6">
       <WalletDetailsCard />
       
-      <SummaryStatsGrid balance={balance} summary={summary} />
+      {/* <SummaryStatsGrid balance={balance} summary={summary} /> */}
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
@@ -290,7 +290,7 @@ const PaymentHistory: React.FC = () => {
             <History className="h-5 w-5" />
             Payment History
           </CardTitle>
-          <Button
+          {/* <Button
             variant="outline"
             onClick={fetchTransactionHistory}
             disabled={loading}
@@ -298,7 +298,7 @@ const PaymentHistory: React.FC = () => {
           >
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
             Refresh
-          </Button>
+          </Button> */}
         </CardHeader>
         <CardContent>
           <TransactionFilters
