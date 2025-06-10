@@ -275,10 +275,10 @@ const StudentPayeeSelector: React.FC<StudentPayeeSelectorProps> = ({ isWalletCon
                       }}
                     >
                       <DialogTrigger asChild>
-                        <Button size="sm" className="flex items-center gap-2">
+                        {/* <Button size="sm" className="flex items-center gap-2">
                           <DollarSign className="h-4 w-4" />
                           Pay
-                        </Button>
+                        </Button> */}
                       </DialogTrigger>
                       <DialogContent>
                         <DialogHeader>
