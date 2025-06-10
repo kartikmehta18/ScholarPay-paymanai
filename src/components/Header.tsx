@@ -32,8 +32,13 @@ const Header: React.FC = () => {
               <GraduationCap className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900">ScholarPay</h1>
-              <p className="text-xs text-gray-500">Scholarship Portal</p>
+             <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent  ">
+              ScholarPay
+              <div className='flex items-center '>
+              <p className="text-xs text-gray-500">powered by | <span className='text-green-900'>PaymanAI</span> </p>
+
+              </div>
+            </span>
             </div>
           </div>
 
