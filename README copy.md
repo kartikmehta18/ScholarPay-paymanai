@@ -1,38 +1,9 @@
 
-# 🎓 ScholarPay – Powered by PaymanAI
+# Scholarship Management System
 
-# [Live Link 🔗](https://scholarpay-paymanai.vercel.app/)
-# [Live Video Demo 🔗](https://scholarpay-paymanai.vercel.app/)
- 
-ScholarPay – Powered by PaymanAI is a smart and user-friendly scholarship management system built with React, TypeScript, and Tailwind CSS. It supports dual login for students and government officials using PaymanAI OAuth and Supabase. Students can view their wallet balance, manage payees, and apply for scholarships by selecting an existing payee or requesting a new one. Government officials can review and approve applications, create payee accounts if needed, and release funds via PaymanAI. The system ensures real-time updates of wallets, payees, and transactions on both dashboards, offering a transparent and efficient scholarship distribution process.
+A comprehensive web application for managing scholarship applications, built with React, TypeScript, and Tailwind CSS. This system enables students to apply for scholarships and allows government officials to review, approve, and process payments.
 
-
-
-
-
-
-
-## Key Integrations
-**PaymanAI SDK**
-
-**OAuth authentication**
-
-**Wallet balance fetch**
-
-**Transaction processing**
-
-**Payee creation and linking**
-
-## ✅ Benefits
-🚀 Fully digitized and paperless scholarship process
-
-🔐 Secure and role-based workflows
-
-🔄 Real-time sync across dashboards
-
-📊 Transparent fund tracking and approval audit
-
-📱 Responsive, mobile-first design for accessibility
+## 🚀 Features
 
 ### For Students
 - **User Authentication**: Secure login/registration system
@@ -174,6 +145,7 @@ Government Login
 │    Queue        │
 └─────────────────┘
 ```
+
 ## 🗂️ Project Structure
 
 ```
@@ -301,13 +273,34 @@ The application uses local storage for data persistence and includes demo data f
 ## 🔧 Technical Details
 
 ### Key Technologies
-- **Frontend: React**: React + TypeScript + Tailwind CSS
-- **Authentication**: PaymanAI OAuth + Supabase Auth
-- **Backend**: Supabase (Serverless Functions or Postgres)
-- **Payments**: PaymanAI SDK (For fund disbursal, payee management)
+- **React 18**: Frontend framework
+- **TypeScript**: Type safety
+- **Tailwind CSS**: Styling
+- **Vite**: Build tool
 - **Lucide React**: Icons
 - **Radix UI**: Component library
 
+### State Management
+- React Context for authentication
+- localStorage for data persistence
+- Component state for UI interactions
+
+### API Integration
+- Payman service for payment processing
+- RESTful service architecture
+- Error handling and validation
+
+## 🧪 Testing
+
+### Manual Testing Workflow
+1. Create student account and submit application
+2. Login as government user and review application
+3. Approve application and verify status updates
+4. Check payment history and payee management
+5. Test rejection workflow
+
+### Test Data
+The application includes fallback demo data for testing without actual submissions.
 
 ## 🔒 Security Features
 
@@ -325,10 +318,42 @@ The application uses local storage for data persistence and includes demo data f
 4. Push to branch (`git push origin feature/new-feature`)
 5. Create Pull Request
 
+## 🐛 Troubleshooting
+
+### Common Issues
+
+1. **Applications not showing**
+   - Check localStorage in browser dev tools
+   - Verify user is logged in with correct role
+
+2. **Payment integration issues**
+   - Check Payman service configuration
+   - Verify network connectivity
+
+3. **Status updates not reflecting**
+   - Refresh the page
+   - Check console for errors
+
+## 📈 Future Enhancements
+
+- [ ] Database integration (replace localStorage)
+- [ ] Email notifications for status updates
+- [ ] Document upload functionality
+- [ ] Advanced filtering and search
+- [ ] Reporting and analytics
+- [ ] Mobile responsiveness improvements
+- [ ] Automated testing suite
 
 ## 📄 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 👥 Support
+
+For support and questions:
+- Create an issue in the repository
+- Contact the development team
+- Check the troubleshooting section
 
 ---
 
