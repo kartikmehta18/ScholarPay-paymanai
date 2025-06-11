@@ -7,7 +7,104 @@
 ScholarPay – Powered by PaymanAI is a smart and user-friendly scholarship management system built with React, TypeScript, and Tailwind CSS. It supports dual login for students and government officials using PaymanAI OAuth and Supabase. Students can view their wallet balance, manage payees, and apply for scholarships by selecting an existing payee or requesting a new one. Government officials can review and approve applications, create payee accounts if needed, and release funds via PaymanAI. The system ensures real-time updates of wallets, payees, and transactions on both dashboards, offering a transparent and efficient scholarship distribution process.
 
 
+<!-- ## 🏗️ System Architecture
 
+![alt text](<Screenshot 2025-06-10 230258.png>)
+![alt text](<Screenshot 2025-06-10 214613.png>)
+![alt text](image3.png>)
+![alt text](<Screenshot 2025-06-10 214832.png>)
+![alt text](<Screenshot 2025-06-10 214825.png>)
+![alt text](<Screenshot 2025-06-10 214901.png>)
+![alt text](<Screenshot 2025-06-10 214921.png>)
+![alt text](<Screenshot 2025-06-10 214946.png>)
+![alt text](<Screenshot 2025-06-10 215145.png>)
+![alt text](<Screenshot 2025-06-10 214418-1.png>)
+![alt text](<Screenshot 2025-06-10 214436.png>)
+![alt text](<Screenshot 2025-06-10 214519.png>)
+![alt text](image-1.png)
+![alt text](<Screenshot 2025-06-10 214653.png>)
+![alt text](image-2.png)
+![alt text](<Screenshot 2025-06-10 214759.png>) -->
+
+<table>
+  <tr>
+    <td>
+      <h4>Architecture Overview</h4>
+      <img src="https://github.com/user-attachments/assets/095674d8-37e9-438b-aa18-ad66bae6f509" width="250"/>
+    </td>
+    <td>
+      <h4>Component 1</h4>
+      <img src="https://github.com/user-attachments/assets/c13ea4be-d3df-4c2d-9b16-35aaa5f0ecb8" width="250"/>
+    </td>
+    <td>
+      <h4>Component 2</h4>
+      <img src="https://github.com/user-attachments/assets/52424f01-50c4-492b-822e-f46d4ae7b92a" width="250"/>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <h4>Component 3</h4>
+      <img src="https://github.com/user-attachments/assets/0a4b6e1f-8fa6-44c1-8f09-80058368169e" width="250"/>
+    </td>
+    <td>
+      <h4>Component 4</h4>
+      <img src="https://github.com/user-attachments/assets/a7a1ee13-7431-40ff-9f9c-3ef66cf62325" width="250"/>
+    </td>
+    <td>
+      <h4>Component 5</h4>
+      <img src="https://github.com/user-attachments/assets/ab87989d-52cc-4d19-b3b9-e1d051cb9591" width="250"/>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <h4>Component 6</h4>
+      <img src="https://github.com/user-attachments/assets/52bcdbf6-415f-45d4-a472-7160e97c1cf2" width="250"/>
+    </td>
+    <td>
+      <h4>Component 7</h4>
+      <img src="https://github.com/user-attachments/assets/0e3da2e9-596c-4cfb-9689-5b22dc2753e0" width="250"/>
+    </td>
+    <td>
+      <h4>Component 8</h4>
+      <img src="https://github.com/user-attachments/assets/492b8bb0-0e6f-4772-be61-cfba7f453656" width="250"/>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <h4>Component 9</h4>
+      <img src="https://github.com/user-attachments/assets/c4c148be-a429-47ec-8c22-f818a2b69738" width="250"/>
+    </td>
+    <td>
+      <h4>Component 10</h4>
+      <img src="https://github.com/user-attachments/assets/e605cb8c-7026-4be3-bb68-9f7b0ae45696" width="250"/>
+    </td>
+    <td>
+      <h4>Component 11</h4>
+      <img src="https://github.com/user-attachments/assets/ef6cd97f-df5d-46e3-83a2-185e0e64b3fc" width="250"/>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <h4>Component 12</h4>
+      <img src="https://github.com/user-attachments/assets/4254c258-6063-4e34-9bc4-46ad01c102ca" width="250"/>
+    </td>
+    <td>
+      <h4>Component 13</h4>
+      <img src="https://github.com/user-attachments/assets/7da1307c-bd5f-4898-af1f-4b29c914c9dd" width="250"/>
+    </td>
+    <td>
+      <h4>Component 14</h4>
+      <img src="https://github.com/user-attachments/assets/6451965f-bd74-49ae-9865-c9cce1f3c139" width="250"/>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <h4>Component 15</h4>
+      <img src="https://github.com/user-attachments/assets/05142fc2-68c9-4805-bbef-d7e85cfb99fc" width="250"/>
+    </td>
+    <td colspan="2"></td>
+  </tr>
+</table>
 
 
 
@@ -48,35 +145,6 @@ ScholarPay – Powered by PaymanAI is a smart and user-friendly scholarship mana
 - **Payment History**: Track all payment transactions
 - **Comprehensive Dashboard**: Statistics and system overview
 
-## 🏗️ System Architecture
-
-```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Student UI    │    │ Government UI   │    │  Auth System    │
-│                 │    │                 │    │                 │
-│ - Dashboard     │    │ - Dashboard     │    │ - Login/Register│
-│ - Applications  │    │ - Reviews       │    │ - User Context  │
-│ - Profile       │    │ - Payments      │    │ - Role-based    │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-         │                       │                       │
-         └───────────────────────┼───────────────────────┘
-                                 │
-                ┌─────────────────▼─────────────────┐
-                │        Application Service        │
-                │                                   │
-                │ - Store/Retrieve Applications     │
-                │ - Status Management              │
-                │ - Data Persistence               │
-                └─────────────────┬─────────────────┘
-                                 │
-                ┌─────────────────▼─────────────────┐
-                │       Local Storage              │
-                │                                   │
-                │ - Applications Data              │
-                │ - User Preferences               │
-                │ - Session Data                   │
-                └───────────────────────────────────┘
-```
 
 ## 📊 Application Flow Diagram
 
@@ -242,7 +310,7 @@ src/
 ### Installation
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/kartikmehta18/ScholarPay-paymanai
 
 # Navigate to project directory
 cd scholarship-management-system
