@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Wallet, Shield } from 'lucide-react';
+import { Wallet, Shield, CheckCircle } from 'lucide-react';
 import { paymanService } from '@/services/paymanService';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -19,11 +19,24 @@ const PaymanLoginButton: React.FC<PaymanLoginButtonProps> = ({
   size = 'default'
 }) => {
   const [isConnecting, setIsConnecting] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
   const [buttonContainerId] = useState(`payman-connect-${Math.random().toString(36).substr(2, 9)}`);
   const { toast } = useToast();
   const { login } = useAuth();
 
   useEffect(() => {
+    // Check if Payman tokens exist in localStorage
+    checkPaymanConnection();
+
+    // Listen for storage changes
+    const handleStorageChange = () => {
+      checkPaymanConnection();
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    // Also check periodically for token updates
+    const interval = setInterval(checkPaymanConnection, 1000);
+
     // Listen for OAuth callback messages
     const handleMessage = async (event: MessageEvent) => {
       if (event.data.type === "payman-oauth-redirect") {
@@ -48,8 +61,29 @@ const PaymanLoginButton: React.FC<PaymanLoginButtonProps> = ({
     };
 
     window.addEventListener("message", handleMessage);
-    return () => window.removeEventListener("message", handleMessage);
+    return () => {
+      window.removeEventListener("message", handleMessage);
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
   }, []);
+
+  const checkPaymanConnection = () => {
+    const token = localStorage.getItem('payman_access_token');
+    const expiry = localStorage.getItem('payman_token_expiry');
+    if (token && expiry) {
+      const expiryTime = parseInt(expiry);
+      const isValid = Date.now() < expiryTime;
+      setIsConnected(isValid);
+      if (!isValid) {
+        // Token expired, clear it
+        localStorage.removeItem('payman_access_token');
+        localStorage.removeItem('payman_token_expiry');
+      }
+    } else {
+      setIsConnected(false);
+    }
+  };
 
   const exchangeCodeForToken = async (code: string) => {
     try {
@@ -94,6 +128,7 @@ const PaymanLoginButton: React.FC<PaymanLoginButtonProps> = ({
           title: "Success",
           description: `Successfully logged in as ${selectedPayee.name} with Payman wallet!`,
         });
+        setIsConnected(true);
         if (onSuccess) {
           onSuccess();
         }
@@ -111,6 +146,14 @@ const PaymanLoginButton: React.FC<PaymanLoginButtonProps> = ({
   };
 
   const handlePaymanLogin = () => {
+    if (isConnected) {
+      // Already connected, show status
+      toast({
+        title: "Already Connected",
+        description: "Payman wallet is already connected"
+      });
+      return;
+    }
     setIsConnecting(true);
     
     // Create container for Payman Connect button
@@ -165,6 +208,34 @@ const PaymanLoginButton: React.FC<PaymanLoginButtonProps> = ({
 
     document.head.appendChild(script);
   };
+
+  const handleDisconnect = () => {
+    localStorage.removeItem('payman_access_token');
+    localStorage.removeItem('payman_token_expiry');
+    paymanService.clearAuth();
+    setIsConnected(false);
+    toast({
+      title: "Disconnected",
+      description: "Payman wallet has been disconnected"
+    });
+  };
+
+  if (isConnected) {
+    return (
+      <div className={`flex items-center gap-2 ${className}`}>
+        <Button 
+          onClick={handleDisconnect} 
+          variant="outline" 
+          size={size} 
+          className="flex items-center gap-2 font-normal text-green-700 text-center"
+        >
+          <CheckCircle className="h-4 w-4 text-green-600" />
+          Payman Connected
+          <Shield className="h-4 w-4" />
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <Button
