@@ -86,13 +86,13 @@ ScholarPay – Powered by PaymanAI is a smart and user-friendly scholarship mana
       <h4> paymanai Dashboard payees prev</h4>
       <img src="https://github.com/user-attachments/assets/4254c258-6063-4e34-9bc4-46ad01c102ca" width="250"/>
     </td>
-  </tr>
-  <tr>
-    <td>
+     <td>
       <h4>Wallet history</h4>
       <img src="https://github.com/user-attachments/assets/7da1307c-bd5f-4898-af1f-4b29c914c9dd" width="250"/>
     </td>
-    <td>
+  </tr>
+  <tr>
+   <td>
       <h4>PaymanAi transaction history</h4>
       <img src="https://github.com/user-attachments/assets/6451965f-bd74-49ae-9865-c9cce1f3c139" width="250"/>
     </td>
