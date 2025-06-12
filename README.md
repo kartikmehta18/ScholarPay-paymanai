@@ -29,81 +29,79 @@ ScholarPay – Powered by PaymanAI is a smart and user-friendly scholarship mana
 <table>
   <tr>
     <td>
-      <h4>Architecture Overview</h4>
+      <h4>Hero Section</h4>
       <img src="https://github.com/user-attachments/assets/095674d8-37e9-438b-aa18-ad66bae6f509" width="250"/>
     </td>
     <td>
-      <h4>Component 1</h4>
+      <h4>Payman OAuth</h4>
       <img src="https://github.com/user-attachments/assets/c13ea4be-d3df-4c2d-9b16-35aaa5f0ecb8" width="250"/>
     </td>
     <td>
-      <h4>Component 2</h4>
+      <h4>Payman OAuth login (dashboard)</h4>
       <img src="https://github.com/user-attachments/assets/52424f01-50c4-492b-822e-f46d4ae7b92a" width="250"/>
     </td>
   </tr>
   <tr>
-    <td>
+    <!-- <td>
       <h4>Component 3</h4>
       <img src="https://github.com/user-attachments/assets/0a4b6e1f-8fa6-44c1-8f09-80058368169e" width="250"/>
-    </td>
+    </td> -->
     <td>
-      <h4>Component 4</h4>
+      <h4>Registration</h4>
       <img src="https://github.com/user-attachments/assets/a7a1ee13-7431-40ff-9f9c-3ef66cf62325" width="250"/>
     </td>
     <td>
-      <h4>Component 5</h4>
+      <h4>Stu-dashboard</h4>
       <img src="https://github.com/user-attachments/assets/ab87989d-52cc-4d19-b3b9-e1d051cb9591" width="250"/>
     </td>
-  </tr>
-  <tr>
-    <td>
-      <h4>Component 6</h4>
+     <td>
+      <h4>Application page</h4>
       <img src="https://github.com/user-attachments/assets/52bcdbf6-415f-45d4-a472-7160e97c1cf2" width="250"/>
     </td>
-    <td>
-      <h4>Component 7</h4>
-      <img src="https://github.com/user-attachments/assets/0e3da2e9-596c-4cfb-9689-5b22dc2753e0" width="250"/>
-    </td>
-    <td>
-      <h4>Component 8</h4>
-      <img src="https://github.com/user-attachments/assets/492b8bb0-0e6f-4772-be61-cfba7f453656" width="250"/>
-    </td>
   </tr>
   <tr>
     <td>
-      <h4>Component 9</h4>
+      <h4>Application Form</h4>
+      <img src="https://github.com/user-attachments/assets/0e3da2e9-596c-4cfb-9689-5b22dc2753e0" width="250"/>
+    </td>
+    <!-- <td>
+      <h4>Component 8</h4>
+      <img src="https://github.com/user-attachments/assets/492b8bb0-0e6f-4772-be61-cfba7f453656" width="250"/>
+    </td> -->
+     <td>
+      <h4>Gov-dashboard</h4>
       <img src="https://github.com/user-attachments/assets/c4c148be-a429-47ec-8c22-f818a2b69738" width="250"/>
     </td>
     <td>
-      <h4>Component 10</h4>
+      <h4>Application-Review</h4>
       <img src="https://github.com/user-attachments/assets/e605cb8c-7026-4be3-bb68-9f7b0ae45696" width="250"/>
-    </td>
-    <td>
-      <h4>Component 11</h4>
-      <img src="https://github.com/user-attachments/assets/ef6cd97f-df5d-46e3-83a2-185e0e64b3fc" width="250"/>
     </td>
   </tr>
   <tr>
     <td>
-      <h4>Component 12</h4>
+      <h4>Payees Fetch /Pay (also create)</h4>
+      <img src="https://github.com/user-attachments/assets/ef6cd97f-df5d-46e3-83a2-185e0e64b3fc" width="250"/>
+    </td>
+     <td>
+      <h4> paymanai Dashboard payees prev</h4>
       <img src="https://github.com/user-attachments/assets/4254c258-6063-4e34-9bc4-46ad01c102ca" width="250"/>
     </td>
+  </tr>
+  <tr>
     <td>
-      <h4>Component 13</h4>
+      <h4>Wallet history</h4>
       <img src="https://github.com/user-attachments/assets/7da1307c-bd5f-4898-af1f-4b29c914c9dd" width="250"/>
     </td>
     <td>
-      <h4>Component 14</h4>
+      <h4>PaymanAi transaction history</h4>
       <img src="https://github.com/user-attachments/assets/6451965f-bd74-49ae-9865-c9cce1f3c139" width="250"/>
     </td>
-  </tr>
-  <tr>
-    <td>
-      <h4>Component 15</h4>
+     <td>
+      <h4>Fetch transaction history</h4>
       <img src="https://github.com/user-attachments/assets/05142fc2-68c9-4805-bbef-d7e85cfb99fc" width="250"/>
     </td>
-    <td colspan="2"></td>
   </tr>
+
 </table>
 
 
