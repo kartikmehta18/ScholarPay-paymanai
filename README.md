@@ -2,7 +2,7 @@
 # 🎓 ScholarPay – Powered by PaymanAI
 
 # [Live Link 🔗](https://scholarpay-paymanai.vercel.app/)
-# [Live Video Demo 🔗](https://scholarpay-paymanai.vercel.app/)
+# [Live Video Demo 🔗](https://youtu.be/IA3OS1vMSHo?si=Dcj7mDcfAyDnCHAT)
  
 ScholarPay – Powered by PaymanAI is a smart and user-friendly scholarship management system built with React, TypeScript, and Tailwind CSS. It supports dual login for students and government officials using PaymanAI OAuth and Supabase. Students can view their wallet balance, manage payees, and apply for scholarships by selecting an existing payee or requesting a new one. Government officials can review and approve applications, create payee accounts if needed, and release funds via PaymanAI. The system ensures real-time updates of wallets, payees, and transactions on both dashboards, offering a transparent and efficient scholarship distribution process.
 
